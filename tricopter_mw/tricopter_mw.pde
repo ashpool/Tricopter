@@ -12,12 +12,10 @@ April  2011     V1.7
 /****CONFIGURABLE PARAMETERS****/
 /*******************************/
 
-//#define DEBUG
-
 /* Set the minimum throttle command sent to the ESC (Electronic Speed Controller)
    This is the minimum value that allow motors to run at a idle speed  */
-//#define MINTHROTTLE 1300 // for Turnigy Plush ESCs 10A
-#define MINTHROTTLE 1120 // for Super Simple ESCs 10A
+#define MINTHROTTLE 1300 // for Turnigy Plush ESCs 10A
+//#define MINTHROTTLE 1120 // for Super Simple ESCs 10A
 //#define MINTHROTTLE 1190
 
 /* The type of multicopter */
@@ -121,18 +119,18 @@ April  2011     V1.7
 
 /* this is the value for the ESCs when thay are not armed
    in some cases, this value must be lowered down to 900 for some specific ESCs */
-#define MINCOMMAND 1000
+#define MINCOMMAND 900
 
 /* this is the maximum value for the ESCs at full power
    this value can be increased up to 2000 */
-#define MAXTHROTTLE 1850
+#define MAXTHROTTLE 2000
 
 /* This is the speed of the serial interface. 115200 kbit/s is the best option for a USB connection.*/
 #define SERIAL_COM_SPEED 115200
 
 /* In order to save space, it's possibile to desactivate the LCD configuration functions
    comment this line only if you don't plan to used a LCD */
-#define LCD_CONF
+//#define LCD_CONF
 
 /* to use Cat's whisker TEXTSTAR LCD, uncomment following line.
    Pleae note this display needs a full 4 wire connection to (+5V, Gnd, RXD, TXD )
@@ -339,17 +337,13 @@ void i2c_init(void) {
 }
 
 void i2c_rep_start(uint8_t address) {
-  debugPrintln("i2c_rep_start");
   TWCR = (1<<TWINT) | (1<<TWSTA) | (1<<TWEN) | (1<<TWSTO); // send REAPEAT START condition
   waitTransmissionI2C(); // wait until transmission completed
-  
   checkStatusI2C(); // check value of TWI Status Register
-  
   TWDR = address; // send device address
   TWCR = (1<<TWINT) | (1<<TWEN);
   waitTransmissionI2C(); // wail until transmission completed
   checkStatusI2C(); // check value of TWI Status Register
-  debugPrintln("i2c_rep_start Done");
 }
 
 void i2c_write(uint8_t data ) {	
@@ -372,21 +366,16 @@ uint8_t i2c_readNak(void) {
 }
 
 void waitTransmissionI2C() {
-  debugPrintln("waitTransmissionI2C");
   uint8_t count = 255;
   while (count-->0 && !(TWCR & (1<<TWINT)) );
   if (count<2) { //we are in a blocking state => we don't insist
     TWCR = 0;  //and we force a reset on TWINT register
     neutralizeTime = micros(); //we take a timestamp here to neutralize the value during a short delay after the hard reset
   }
-  debugPrintln("waitTransmissionI2C Done");
 }
 
 void checkStatusI2C() {
-  debugPrintln("checkStatusI2C");
   if ( TW_STATUS  == 0xF8) { //TW_NO_INFO : this I2C error status indicates a wrong I2C communication.
-    signalError(" Error: TW_NO_INFO : this I2C error status indicates a wrong I2C communication");
-  
     // WMP does not respond anymore => we do a hard reset. I did not find another way to solve it. It takes only 13ms to reset and init to WMP or WMP+NK
     TWCR = 0;
     POWERPIN_OFF //switch OFF WMP
@@ -399,8 +388,6 @@ void checkStatusI2C() {
     #endif
     neutralizeTime = micros(); //we take a timestamp here to neutralize the WMP or WMP+NK values during a short delay after the hard reset
   }
-  signalOK();
-  debugPrintln("checkStatusI2C Done");
 }
 
 
@@ -896,17 +883,14 @@ void i2c_ACC_getADC() {
 static uint8_t rawADC_WMP[6];
 
 void i2c_WMP_init(uint8_t d) {
-  debugPrintln("i2c_WMP_init");
   delay(d);
   i2c_rep_start(0xA6 + 0);//I2C write direction => 0
-  debugPrintln("Foo");
   i2c_write(0xF0); 
   i2c_write(0x55); 
   delay(d);
   i2c_rep_start(0xA6 + 0);//I2C write direction => 0
   i2c_write(0xFE); 
   i2c_write(0x05); 
-  
   delay(d);
   if (d>0) {
     uint8_t numberAccRead = 0;
@@ -914,16 +898,10 @@ void i2c_WMP_init(uint8_t d) {
       delay(3);
       if (rawIMU(0) == 0) numberAccRead++; // we detect here is nunchuk extension is available
     }
-    
-    if (numberAccRead>25){
-      debugPrintln("   nunchuk present");
+    if (numberAccRead>25)
       nunchukPresent = 1;
-    }else{
-      debugPrintln("   nunchuk not present");
-    }
     delay(10);
   }
-  debugPrintln("i2c_WMP_init Done");
 }
 
 void i2c_WMP_getRawADC() {
@@ -1238,13 +1216,10 @@ void writeAllMotors(int16_t mc) {   // Sends commands to all motors
 }
 
 void initializeMotors() {
-  debugPrintln("initializeMotors");
-  for(uint8_t i=0;i<NUMBER_MOTOR;i++){
+  for(uint8_t i=0;i<NUMBER_MOTOR;i++)
     pinMode(PWM_PIN[i],OUTPUT);
-  }
   writeAllMotors(1000);
   delay(300);
-  debugPrintln("initializeMotors Done");
 }
 
 #if defined(SERVO)
@@ -1408,7 +1383,6 @@ volatile uint16_t rcValue[8] = {1500,1500,1500,1500,1500,1500,1500,1500}; // int
 
 // Configure each rc pin for PCINT
 void configureReceiver() {
-  debugPrintln("configureReceiver");
   #ifndef SERIAL_SUM_PPM
     for (uint8_t chan = 0; chan < 8; chan++)
       for (uint8_t a = 0; a < 4; a++)
@@ -1429,7 +1403,6 @@ void configureReceiver() {
   #else
     PPM_PIN_INTERRUPT
   #endif
-  debugPrintln("configureReceiver Done");
 }
 
 #ifndef SERIAL_SUM_PPM
@@ -1560,7 +1533,6 @@ static uint8_t activateAcc8,activateBaro8,activateMag8;
 static uint8_t activateCamStab8,activateCamTrig8;
 
 void readEEPROM() {
-  debugPrintln("readEEPROM");
   uint8_t i,p=1;
   for(i=0;i<3;i++) {P8[i] = EEPROM.read(p++);I8[i] = EEPROM.read(p++);D8[i] = EEPROM.read(p++);}
   PLEVEL8 = EEPROM.read(p++);ILEVEL8 = EEPROM.read(p++);
@@ -1574,8 +1546,6 @@ void readEEPROM() {
   //note on the following lines: we do this calcul here because it's a static and redundant result and we don't want to load the critical loop whith it
   rcFactor1 = rcRate8/50.0*rcExpo8/100.0/250000.0;
   rcFactor2 = (100-rcExpo8)*rcRate8/5000.0;
-  
-  debugPrintln("readEEPROM Done");
 }
 
 void writeParams() {
@@ -1595,8 +1565,6 @@ void writeParams() {
 }
 
 void checkFirstTime() {
-  debugPrintln("checkFirstTime");
-  
   if ( EEPROM.read(0) != checkNewConf ) {
     P8[ROLL] = 40; I8[ROLL] = 30; D8[ROLL] = 15;
     P8[PITCH] = 40; I8[PITCH] = 30; D8[PITCH] = 15;
@@ -1610,9 +1578,7 @@ void checkFirstTime() {
     activateAcc8 = 0;activateBaro8 = 0;activateMag8 = 0;
     activateCamStab8 = 0;activateCamTrig8 = 0;
     writeParams();
-    debugPrintln("checkFirstTime writeParams()");
   }
-  debugPrintln("checkFirstTime Done");
 }
 
 // *****************************
@@ -1837,32 +1803,22 @@ void annexCode() { //this code is excetuted at each loop and won't interfere wit
   rcCommand[YAW]      = rcHysteresis[YAW]-MIDRC;
 }
 
+
 void setup() {
   Serial.begin(SERIAL_COM_SPEED);
-  pinMode(13, OUTPUT); 
-  
-  debugPrintEEPROM();
-  
-  debugPrintln("Setup");
-  
   LEDPIN_PINMODE
   POWERPIN_PINMODE
   BUZZERPIN_PINMODE
   POWERPIN_OFF
-  
   initializeMotors();
-  
   readEEPROM();
-  
   checkFirstTime();
-  
   configureReceiver();
   delay(200);
   POWERPIN_ON
   delay(100);
   i2c_init();
   delay(100);
-    
   
   #if defined(ITG3200) || defined(L3G4200D)
     i2c_Gyro_init();
@@ -1898,8 +1854,6 @@ void setup() {
     calibratingA = 0;
   #endif
   calibratingG = 400;
-  
-  debugPrintln("SETUP DONE");
 }
 
 // ******** Main Loop *********
@@ -1922,7 +1876,6 @@ void loop () {
   static uint8_t camState = 0;
   static uint32_t camTime,magTime;
   static uint8_t rcOptions;
-
 
   if (currentTime > (rcTime + 20000) ) { // 50Hz
     computeRC();
@@ -2308,53 +2261,4 @@ void serialCom() {
     }
   }
 }
-
-/* ######################### 
-          My Methods
-   #########################
-*/
-
-void debugPrint(char message[]){
-  #if defined(DEBUG)
-    Serial.print(message);
-  #endif
-}
-
-void debugPrintln(char message[]){
-  #if defined(DEBUG)
-    Serial.println(message);
-  #endif
-}
-
-void debugPrintEEPROM(){
-  #if defined(DEBUG)
-    int i;
-    int value; 
-
-    Serial.println("debugPrintEEPROM");
-    
-    for(i = 0; i < 30; i++){
-      value = EEPROM.read(i);
-      Serial.println();
-      Serial.print(i);
-      Serial.print(" = ");
-      Serial.print(value);
-    }
-    
-    Serial.println("debugPrintEEPROM Done");
-  #endif
-}
-
-
-void signalError(char message[]){
-  digitalWrite(13, HIGH);   // set the LED on
-  Serial.println(message);
-}
-
-void signalOK(){
-  digitalWrite(13, LOW);   // set the LED off
-}
-
-
-
 
