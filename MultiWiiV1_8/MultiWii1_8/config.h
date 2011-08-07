@@ -7,7 +7,7 @@
 //#define MINTHROTTLE 1300 // for Turnigy Plush ESCs 10A
 //#define MINTHROTTLE 1120 // for Super Simple ESCs 10A
 //#define MINTHROTTLE 1220
-#define MINTHROTTLE 1150 
+#define MINTHROTTLE 1300 
 
 /* The type of multicopter */
 //#define GIMBAL
@@ -24,8 +24,8 @@
 //#define OCTOFLATX //beta
 //#define FLYING_WING //experimental
 
-#define YAW_DIRECTION 1 // if you want to reverse the yaw correction direction
-//#define YAW_DIRECTION -1
+//#define YAW_DIRECTION 1 // if you want to reverse the yaw correction direction
+#define YAW_DIRECTION -1
 
 #define I2C_SPEED 100000L     //100kHz normal mode, this value must be used for a genuine WMP
 //#define I2C_SPEED 400000L   //400kHz fast mode, it works only with some WMP clones
@@ -168,7 +168,7 @@
 
 /* In order to save space, it's possibile to desactivate the LCD configuration functions
    comment this line only if you don't plan to used a LCD */
-#define LCD_CONF
+//#define LCD_CONF
 
 /* to use Cat's whisker TEXTSTAR LCD, uncomment following line.
    Pleae note this display needs a full 4 wire connection to (+5V, Gnd, RXD, TXD )
